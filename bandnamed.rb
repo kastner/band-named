@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.dirname(__FILE__) + "/../../lib"
+$:.unshift File.dirname(__FILE__)
 %w|rubygems camping camping/session openid redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
@@ -223,3 +224,9 @@ end
 #   Camping::Models::Session.create_schema
 #   Peglist::Models.create_schema :assume => (Peglist::Models::Peg.table_exists? ? 1.0 : 0.0)
 # end
+
+if __FILE__ == $0
+  Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping.db"
+  Bandnamed::Models::Base.threaded_connections = false
+  Mongrel::Camping::start("0.0.0.0",3302,"/",Bandnamed).run.join
+end
