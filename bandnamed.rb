@@ -2,7 +2,7 @@
 
 $:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
-%w|rubygems mongrel camping mongrel/camping camping/session openid redcloth open-uri|.each{|lib| require lib}
+%w|rubygems mongrel camping mongrel/camping camping/session face openid redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
 
@@ -36,6 +36,8 @@ module Bandnamed::Models
   end
   
   class User < Base
+    validates_presence_of :username
+    validates_length_of :username, :minimum => 2
     validates_uniqueness_of :username
     has_many :bands    
   end
@@ -65,8 +67,61 @@ module Bandnamed::Controllers
   class Index < R '/'
     def get
       # # raise @state.to_s
-      # @user = User.find(@state.user_id) if @state.user_id
+      @user = User.find(@state.user_id) if @state.user_id
+      @new_bands = Band.find(:all, :order => "bandnamed_bands.created_at DESC", :limit => 20, :include => :user)
       render :index
+    end
+  end
+  
+  class AvatarSearch < R '/avatar/(.+)/(.+)'
+    def get(service, username)
+      case service
+      when "twitter"
+        TwitterFace.url(username)
+      when "flickr"
+        FlickrFace.url(username)
+      end
+    end
+  end
+  
+  class NewBand
+    def post
+      @user = User.find(@state.user_id) if @state.user_id
+      @band = @user.bands.build(:name => input.band_name)
+      @band.save!
+      redirect HURL(Index).to_s
+    end
+  end
+  
+  class Signup
+    def get
+      if !@state.openid
+        @error = "You must sign in with OpenID before you sign up"
+        @new_bands = []
+        render :index
+      else
+        @new_user = User.new
+        render :signup
+      end
+    end
+    
+    def post
+      puts "Posting #{input.username}."
+      @username = input.username
+      @avatar_url = input.avatar_url
+      
+      @new_user = User.new(:openid => @state.openid, :username => @username, :avatar_url => @avatar_url)
+      if @new_user.valid?
+        # puts "Saved"
+        @new_user.save
+        @state.user_id = @new_user.id
+        @state.username = @new_user.username
+        redirect HURL(Index).to_s
+      else
+        # puts "FAIL!"
+        @avatar_url = "/static/blank.jpg"
+        render :signup
+      end
     end
   end
   
@@ -131,7 +186,7 @@ module Bandnamed::Controllers
     def get
       @state.keys.each{|key| @state.delete(key)}
       @message = "You have been logged out"
-      render :index
+      redirect HURL(Index).to_s
     end
   end
   
@@ -153,13 +208,110 @@ module Bandnamed::Controllers
 end
 
 module Bandnamed::Views
-  def amp
-    span.amp "&"
+  def js(str)
+    text <<-JAVASCRIPT
+      <script type="text/javascript" charset="utf-8">
+      #{str}
+      </script>
+    JAVASCRIPT
   end
   
   def textalize(str)
     text RedCloth.new(str).to_html
   end
+  
+  def signup
+    h1 "Pick your username and picture"
+    h2 { text "You will use the OpenID <em class='openid_url'>#{@state.openid}</em> to log in" }
+    
+    errors_for @new_user
+    
+    form :action => R(Signup), :method => :post, :class => "signup" do
+      p do
+        label 'Username:', :for => 'signup_username'
+        input :name => 'username', :type => 'text', :id => 'signup_username', :value => @new_user.username
+      end
+
+      p do
+        label 'Picture URL:', :for => 'signup_avatar'
+        input :name => 'avatar_url', :type => 'text', :id => 'signup_avatar', :value => @new_user.avatar_url
+        js <<-HTML
+          $("#signup_avatar").change(function() {
+            var url = $("#signup_avatar").val();
+            if (url) {
+              $('#avatar_preview').attr("src", url);
+            }
+          });
+          $(document).ready(function() { $("#signup_avatar").change(); });
+        HTML
+      end
+      
+      p do
+        label 'Picture Preview:'
+        img :id => 'avatar_preview', :width => 45, :height => 45, :src => (@avatar_url || "/static/blank.jpg")
+        div.text_box
+      end
+      
+      p do
+        a "Click here to use a picture from flickr or twitter", :href => "#", :id => "avatar_trigger"
+        js <<-HTML
+        $("#avatar_trigger").click(function(){$("#external_avatars").toggle();});
+        HTML
+      end
+      
+      fieldset.online_avatar! :style => "display: none;", :id => "external_avatars" do
+        legend "Use a Picture from another service:"
+        p do
+          label 'Flickr username:', :for => 'flickr_username'
+          input :name => 'flickr_username', :type => 'text', :class => 'avatar_search', :id => 'flickr_username'
+          input :type => 'button', :value => "Lookup", :id => 'flickr_button', :class => 'avatar_button'
+        end
+        p do
+          label 'Twitter username:', :for => 'twitter_username'
+          input :name => 'twitter_username', :type => 'text', :class => 'avatar_search', :id => 'twitter_username'
+          input :type => 'button', :value => "Lookup", :id => 'twitter_button', :class => 'avatar_button'
+        end
+        js <<-HTML
+          $('.avatar_button').click(function(event) {
+            var type = event.target.id.split("_")[0]
+            var url = '/avatar/' + type + '/' + $('#'+type+'_username').val()
+            $.get(url, function(data) {
+              $('#signup_avatar').val(data);
+              $('#avatar_preview').attr("src", data);
+            })
+          });
+        HTML
+      end
+      
+      p do
+        input :type => 'submit', :value => "Sign up"
+      end
+    end
+  end
+  
+  def index
+    # h1 "Coming soon!"
+    # if @state.username
+    #   _logged_in_home
+    # else
+    #   _new_home
+    # end
+    if @state.username
+      h3 "Add a Band"
+      form :action => R(NewBand), :method => :post, :class => "new_band" do
+        label 'Band name:', :for => 'band_name'
+        input :name => 'band_name', :id => 'band_name', :type => 'text'
+        input :type => 'submit', :value => 'add'
+      end
+    else
+      h2 "Sign in above to add bands"
+    end
+    ul.new_bands! do
+      @new_bands.each do |band|
+        li { text band.name + " <em>by: #{band.user.username}</em>"}
+      end
+    end
+  end  
   
   def layout
     xhtml_strict do
@@ -177,14 +329,26 @@ module Bandnamed::Views
               text %Q{<a href="/" title='Bandnamed'>Band Named.com</a>}
             end
             hr
-            form :action => R(Login), :method => :post do
-              div do
-                p { text %Q{Sign in with your <img src="/static/openid-icon.gif">OpenID!} }
-                p '(eg: http://openid.aol.com/<AOL IM>)'
-                # label , :for => 'login_openid', :id => 'login_openid_label'
-                input :name => 'openid_url', :type => 'text', :id => 'login_openid'
-                input :type => 'submit', :value => 'go', :id => 'submit_button'
+            if !@new_user
+              if !@state.username or @state.username.empty?
+                form :action => R(Login), :method => :post, :class => "sign_in_form" do
+                  div do
+                    p { text %Q{Sign in with your <img src="/static/openid-icon.gif">OpenID!} }
+                    p '(eg: http://openid.aol.com/<AOL IM>)'
+                    # label , :for => 'login_openid', :id => 'login_openid_label'
+                    input :name => 'openid_url', :type => 'text', :id => 'login_openid'
+                    input :type => 'submit', :value => 'go', :id => 'submit_button'
+                  end
+                end
+              else
+                form :action => R(Logout), :method => :get, :class => "logged_in_form" do
+                  div do
+                    div { text "Logged in as <em class='username'>#{@state.username}</em> (<em class='openid_url'>#{@state.openid}</em>)" }
+                    a "click here to log out", :href => R(Logout)
+                  end
+                end
               end
+            else
             end
             
             #   if !@new_user
@@ -198,7 +362,7 @@ module Bandnamed::Views
             # end
           end
           div.content! do
-            div.GridLayout! do
+            div.GridLayout! :style => "display:none" do
               text %Q!<div id="GridLayout-params">{
                           column_width:60,
                           column_count:11,
@@ -217,77 +381,6 @@ module Bandnamed::Views
     end
   end
   
-  def index
-    h1 "Coming soon!"
-    # if @state.username
-    #   _logged_in_home
-    # else
-    #   _new_home
-    # end
-  end
-  
-  def signup
-    h1 "Pick your username and an avatar if you have one"
-    h2 "You will use the OpenID #{@state.openid} to log in"
-    
-    errors_for @new_user
-    
-    form :action => R(Signup), :method => :post do
-      p do
-        label 'Username:', :for => 'signup_username'
-        input :name => 'username', :type => 'text', :id => 'signup_username', :value => @new_user.username
-        text <<-HTML
-          <script type="text/javascript" charset="utf-8">
-          Event.observe('signup_username', 'keyup', function() {
-            $('flickr_username').value = $('signup_username').value
-            $('twitter_username').value = $('signup_username').value
-          })            
-          </script>
-        HTML
-      end
-      
-      fieldset do
-        legend "Find my avatar:"
-        p do
-          label 'Flickr username:', :for => 'flickr_username'
-          input :name => 'flickr_username', :type => 'text', :class => 'avatar_search', :id => 'flickr_username'
-          input :type => 'button', :value => "Lookup", :id => 'flickr_button', :class => 'avatar_button'
-        end
-        p do
-          label 'Twitter username:', :for => 'twitter_username'
-          input :name => 'twitter_username', :type => 'text', :class => 'avatar_search', :id => 'twitter_username'
-          input :type => 'button', :value => "Lookup", :id => 'twitter_button', :class => 'avatar_button'
-        end
-        text <<-HTML
-        <script type="text/javascript" charset="utf-8">
-          document.getElementsByClassName('avatar_button').forEach(function(button) {
-            button.onclick = function() {
-              var type = button.id.split("_")[0]
-              var url = '/avatar/' + type + '/' + $(type+'_username').value
-              new Ajax.Request(url, {
-                method: 'get',
-                onSuccess: function(req) {
-                  $('signup_avatar').value = req.responseText;
-                  $('avatar_preview').src = req.responseText;
-                }
-              })
-            }
-          })
-        </script>
-        HTML
-      end
-      
-      p do
-        label 'Avatar url:', :for => 'signup_avatar'
-        input :name => 'avatar_url', :type => 'text', :id => 'signup_avatar', :value => @new_user.avatar_url
-        img :id => 'avatar_preview', :width => 45, :src => @avatar_url
-      end
-      
-      p do
-        input :type => 'submit', :value => "Sign up"
-      end
-    end
-  end
 end
 
 def Bandnamed.create

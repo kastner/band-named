@@ -1,7 +1,7 @@
 body {
   margin: 0;
   padding: 0;
-  font: 12px/1.2em "Helvetica Nueu", helvetica, sans-serif;
+  font: 12px/1.2em helvetica, sans-serif;
   background: #f2f0e5;
   color: #3C3327;
 }
@@ -36,7 +36,7 @@ body {
   text-decoration: none;
 }
 
-#header form {
+#header form.sign_in_form {
 /*  margin-top: -300px;*/
   position: absolute;
   margin-top: -147px;
@@ -44,14 +44,21 @@ body {
   line-height: 0.5em;
 }
 
-#header form #login_openid {
+#header form.sign_in_form #login_openid {
   width: 144px;
   font-size: 9px;
 }
 
-#header form #submit_button {
+#header form.sign_in_form #submit_button {
   font-size: 9px;
   margin-left: 12px;
+}
+
+#header form.logged_in_form {
+  position: absolute;
+  margin-top: -117px;
+  margin-left: 24px;
+  width: 200px;
 }
 
 #header hr {
@@ -74,3 +81,42 @@ body {
 #footer p {
   padding-top: 13px;
 }
+
+
+/* elements */
+
+em.openid_url {
+  color: #9F8A66;
+}
+
+form.signup label {
+  width: 90px;
+  float: left;
+}
+
+form.signup input[type=text] {
+  clear: left;
+  margin-left: 20px;
+  width: 274px;
+}
+
+form #avatar_preview {
+  clear: left;
+  margin-left: 20px;
+}
+
+form.new_band label {
+  width: 90px;
+  float: left;
+}
+
+form.new_band input[type=text] {
+  clear: left;
+  margin-left: 20px;
+  width: 274px;
+}
+
+form.new_band input[type=submit] {
+  margin-left: 12px;
+}
+
