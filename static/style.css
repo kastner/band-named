@@ -1,0 +1,35 @@
+body {
+  font: 12px/1.2em "Helvetica Nueu", helvetica, sans-serif;
+  background: #f2f0e5;
+  color: #3C3327;
+}
+
+#page {
+  width: 780px;
+  margin: 0 auto;
+  margin-top: 20px;
+  background: white;
+  min-height: 400px;
+  background: #f2f0e5 url('/static/bg.jpg') repeat-y center;
+}
+
+#header .wrap {
+  position: relative;
+  overflow: auto;
+  background: #f2f0e5 url('/static/header.jpg') no-repeat center;
+  height: 256px;
+  overflow: hidden;
+}
+
+#header hr {
+  display: none;
+}
+
+#content {
+  padding: 0 27px;
+}
+
+#footer {
+  min-height: 100px;
+  background: #f2f0e5 url('/static/footer.jpg') no-repeat bottom;
+}

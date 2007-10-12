@@ -110,7 +110,9 @@ module Bandnamed::Views
     xhtml_strict do
       head do
         title "Bandnamed | Socially Unacceptable"
-        # link :rel => 'stylesheet', :type => 'text/css', :href => '/static/style.css'
+        link :rel => 'stylesheet', :type => 'text/css', :href => '/static/style.css'
+        script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/jquery.js'
+        script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/gridlayout.js'
         # link :rel => 'stylesheet', :type => 'text/css', :href => '/static/lightbox.css'
         # link :rel => 'shortcut icon', :type => 'image/png', :href => '/static/favicon.png'
         # link :rel => 'icon', :type => 'image/png', :href => '/static/favicon.png'
@@ -124,7 +126,9 @@ module Bandnamed::Views
             # h2.logo! do
             #   text %Q{<a href="/" title='Peg list at Meta | ateM'><img src="/static/logo.png" alt="Peg list at Meta | ateM"/></a>}
             # end
-            # div.wrap do
+            div.wrap do
+              hr
+            end
             #   hr
             #   if !@new_user
             #     _login
@@ -137,6 +141,15 @@ module Bandnamed::Views
             # end
           end
           div.content! do
+            div.GridLayout! do
+              text %Q!<div id="GridLayout-params">{
+                          column_width:60,
+                          column_count:11,
+                          subcolumn_count:2,
+                          column_gutter:12,
+                          align:'center'
+                      }</div>!
+            end
             self << yield  
           end
           div.footer! do
