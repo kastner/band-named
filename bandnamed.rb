@@ -12,64 +12,54 @@ module Bandnamed
   include Camping::Session
 end
 
-# module Peglist::Helpers
-#   def HURL(*args)
-#     url = URL(*args)
-#     url.scheme = "http"
-#     if `hostname`.match(/i-am-a-Mac/)
-#       url.host = "peglist.metaatem.net"
-#       url.port = nil
-#     end
-#     url
-#   end
-#   
-#   def escape_javascript(javascript)
-#     (javascript || '').gsub('\\','\0\0').gsub(/\r\n|\n|\r/, "\\n").gsub(/["']/) { |m| "\\#{m}" }
-#   end
-# end
+module Bandnamed::Helpers
+  def HURL(*args)
+    url = URL(*args)
+    url.scheme = "http"
+    if `hostname`.match(/i-am-a-Mac/)
+      url.host = "bandnamed.com"
+      url.port = nil
+    end
+    url
+  end
+  
+  def escape_javascript(javascript)
+    (javascript || '').gsub('\\','\0\0').gsub(/\r\n|\n|\r/, "\\n").gsub(/["']/) { |m| "\\#{m}" }
+  end
+end
 
-# module Peglist::Models
-#   class Peg < Base
-#     belongs_to :user
-#     validates_format_of :number, :with => /^[0-9]+$/
-#     validates_uniqueness_of :number, :scope => :user_id
-#   end
-#   
-#   class User < Base
-#     validates_uniqueness_of :username
-#     has_many :pegs
-#     
-#     def ordered_pegs
-#       zeros, rest = pegs.find(:all).partition {|i| i.number.match(/^0/)}
-#       zeros.sort! {|a,b| a.number <=> b.number}
-#       rest.sort! {|a,b| a.number.to_i <=> b.number.to_i}
-#       [zeros, rest].flatten
-#     end
-#   end
-#   
-#   class CreateTheBasics < V 1.0
-#     def self.up
-#       create_table :peglist_pegs do |t|
-#         t.column :id, :integer, :null => false
-#         t.column :user_id, :integer, :null => false
-#         t.column :number, :string, :null => false
-#         t.column :phrase, :string
-#         t.column :image_url, :string
-#         t.column :image_link, :string
-#         t.column :notes, :text
-#         t.column :created_at, :datetime
-#       end
-#       
-#       create_table :peglist_users do |t|
-#         t.column :id, :integer, :null => false
-#         t.column :username, :string, :null => false
-#         t.column :openid, :string
-#         t.column :avatar_url, :string
-#         t.column :created_at, :datetime
-#       end
-#     end
-#   end
-# end
+module Bandnamed::Models
+  class Band < Base
+    belongs_to :user
+    validates_presence_of :name
+    validates_uniqueness_of :name
+  end
+  
+  class User < Base
+    validates_uniqueness_of :username
+    has_many :bands    
+  end
+  
+  class CreateTheBasics < V 1.0
+    def self.up
+      create_table :bandnamed_bands do |t|
+        t.column :id, :integer, :null => false
+        t.column :user_id, :integer, :null => false
+        t.column :name, :string, :null => false
+        t.column :created_at, :datetime
+        t.column :updated_at, :datetime
+      end
+      
+      create_table :bandnamed_users do |t|
+        t.column :id, :integer, :null => false
+        t.column :username, :string, :null => false
+        t.column :openid, :string
+        t.column :avatar_url, :string
+        t.column :created_at, :datetime
+      end
+    end
+  end
+end
 
 module Bandnamed::Controllers
   class Index < R '/'
@@ -79,7 +69,72 @@ module Bandnamed::Controllers
       render :index
     end
   end
-    
+  
+  class Login
+    def open_id_consumer
+      OpenID::Consumer.new(@state, OpenID::FilesystemStore.new("/tmp/openids"))
+    end
+
+    def normalize_url(url)
+      url = url.downcase
+
+      case url
+      when %r{^https?://[^/]+/[^/]*}
+        url # already normalized
+      when %r{^https?://[^/]+$}
+        url + "/"
+      when %r{^[.\d\w]+/.*$}
+        "http://" + url
+      when %r{^[.\d\w]+$}
+        "http://" + url + "/"
+      else
+        raise "Unable to normalize: #{url}"
+      end
+    end
+
+    def get
+      response = open_id_consumer.complete(input)
+      identity_url = normalize_url(response.identity_url) if response.identity_url
+
+      case response.status
+      when OpenID::CANCEL
+        @a = "Canceled"
+      when OpenID::FAILURE
+        @a = "OpenID authentication failed: #{response.msg}"
+      when OpenID::SUCCESS
+        @state.openid = identity_url
+        @user = User.find_by_openid(identity_url)
+        if @user
+          @state.user_id = @user.id
+          @state.username = @user.username
+          redirect HURL(Index).to_s
+        else
+          redirect HURL(Signup).to_s
+        end
+      end
+    end
+
+    def post
+      openid_url = normalize_url(input.openid_url)
+      response = open_id_consumer.begin(openid_url)
+
+      case response.status
+      when OpenID::FAILURE
+        @a = "Failure with that OpenID url. Check it and try again please."
+      when OpenID::SUCCESS
+        redirect response.redirect_url(self.HURL.to_s, self.HURL(Login).to_s)
+      end      
+    end
+  end
+
+  class Logout
+    def get
+      @state.keys.each{|key| @state.delete(key)}
+      @message = "You have been logged out"
+      render :index
+    end
+  end
+  
   class Static < R '/static/(.+)'
     MIME_TYPES = {'.css' => 'text/css', '.js' => 'text/javascript', 
                   '.jpg' => 'image/jpeg'}
@@ -109,27 +164,29 @@ module Bandnamed::Views
   def layout
     xhtml_strict do
       head do
-        title "Bandnamed | Socially Unacceptable"
+        title "Band Named | Socially Unacceptable Band Names (now with Ajax)"
         link :rel => 'stylesheet', :type => 'text/css', :href => '/static/style.css'
-        script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/jquery.js'
+        script :type => 'text/javascript', :src => '/static/jquery.js'
+        # script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/jquery.js'
         script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/gridlayout.js'
-        # link :rel => 'stylesheet', :type => 'text/css', :href => '/static/lightbox.css'
-        # link :rel => 'shortcut icon', :type => 'image/png', :href => '/static/favicon.png'
-        # link :rel => 'icon', :type => 'image/png', :href => '/static/favicon.png'
-        # script :type => 'text/javascript', :src => '/static/prototype.js'
-        # script :type => 'text/javascript', :src => '/static/lightbox.js'
-        # script :type => 'text/javascript', :src => '/static/image_panel.js'
       end
       body :id => (@body_id || "home") do
         div.page! do
           div.header! do
-            # h2.logo! do
-            #   text %Q{<a href="/" title='Peg list at Meta | ateM'><img src="/static/logo.png" alt="Peg list at Meta | ateM"/></a>}
-            # end
             div.wrap do
-              hr
+              text %Q{<a href="/" title='Bandnamed'>Band Named.com</a>}
             end
-            #   hr
+            hr
+            form :action => R(Login), :method => :post do
+              div do
+                p { text %Q{Sign in with your <img src="/static/openid-icon.gif">OpenID!} }
+                p '(eg: http://openid.aol.com/<AOL IM>)'
+                # label , :for => 'login_openid', :id => 'login_openid_label'
+                input :name => 'openid_url', :type => 'text', :id => 'login_openid'
+                input :type => 'submit', :value => 'go', :id => 'submit_button'
+              end
+            end
+            
             #   if !@new_user
             #     _login
             #   end
@@ -152,10 +209,10 @@ module Bandnamed::Views
             end
             self << yield  
           end
-          div.footer! do
-
-          end          
         end
+        div.footer! do
+          p { text %Q{Site design and development by <a href="mailto:kastner@gmail.com">Erik Kastner</a>}}
+        end          
       end
     end
   end
@@ -233,10 +290,10 @@ module Bandnamed::Views
   end
 end
 
-# def Peglist.create
-#   Camping::Models::Session.create_schema
-#   Peglist::Models.create_schema :assume => (Peglist::Models::Peg.table_exists? ? 1.0 : 0.0)
-# end
+def Bandnamed.create
+  Camping::Models::Session.create_schema
+  Bandnamed::Models.create_schema :assume => (Bandnamed::Models::Band.table_exists? ? 1.0 : 0.0)
+end
 
 if __FILE__ == $0
   Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping.db"

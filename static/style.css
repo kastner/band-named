@@ -1,4 +1,6 @@
 body {
+  margin: 0;
+  padding: 0;
   font: 12px/1.2em "Helvetica Nueu", helvetica, sans-serif;
   background: #f2f0e5;
   color: #3C3327;
@@ -7,10 +9,10 @@ body {
 #page {
   width: 780px;
   margin: 0 auto;
-  margin-top: 20px;
   background: white;
   min-height: 400px;
   background: #f2f0e5 url('/static/bg.jpg') repeat-y center;
+  margin-bottom: -19px;
 }
 
 #header .wrap {
@@ -19,6 +21,37 @@ body {
   background: #f2f0e5 url('/static/header.jpg') no-repeat center;
   height: 256px;
   overflow: hidden;
+  text-indent: -1000px;
+  outline: none;
+  padding-left: 230px;
+  font-size: 40px;
+}
+
+#header .wrap a {
+  position: absolute;
+  height: 256px;
+  display: block;
+  line-height: 390px;
+  color: #887457;
+  text-decoration: none;
+}
+
+#header form {
+/*  margin-top: -300px;*/
+  position: absolute;
+  margin-top: -147px;
+  margin-left: 24px;
+  line-height: 0.5em;
+}
+
+#header form #login_openid {
+  width: 144px;
+  font-size: 9px;
+}
+
+#header form #submit_button {
+  font-size: 9px;
+  margin-left: 12px;
 }
 
 #header hr {
@@ -26,10 +59,18 @@ body {
 }
 
 #content {
-  padding: 0 27px;
+  padding: 0 26px;
+  background-color: white;
+  margin: 10px;
 }
 
 #footer {
-  min-height: 100px;
-  background: #f2f0e5 url('/static/footer.jpg') no-repeat bottom;
+  min-height: 50px;
+  background: #f2f0e5 url('/static/footer.jpg') no-repeat center bottom;
+  text-align: center;
+/*  border: 1px solid #999;*/
+}
+
+#footer p {
+  padding-top: 13px;
 }
