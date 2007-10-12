@@ -2,7 +2,7 @@
 
 $:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
-%w|rubygems camping camping/session openid redcloth open-uri|.each{|lib| require lib}
+%w|rubygems mongrel camping mongrel/camping camping/session openid redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
 
