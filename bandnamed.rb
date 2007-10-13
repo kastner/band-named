@@ -138,10 +138,10 @@ module Bandnamed::Controllers
         url # already normalized
       when %r{^https?://[^/]+$}
         url + "/"
-      when %r{^[.\d\w]+/.*$}
+      when %r{^[.\d\w]+\.[.\d\w]+/.*$} # must have a period
         "http://" + url
       when %r{^[.\d\w]+$}
-        "http://" + url + "/"
+        "http://openid.aol.com/" + url.gsub(/\s/, '')
       else
         raise "Unable to normalize: #{url}"
       end
@@ -333,8 +333,9 @@ module Bandnamed::Views
               if !@state.username or @state.username.empty?
                 form :action => R(Login), :method => :post, :class => "sign_in_form" do
                   div do
-                    p { text %Q{Sign in with your <img src="/static/openid-icon.gif">OpenID!} }
-                    p '(eg: http://openid.aol.com/<AOL IM>)'
+                    p 'type in your AOL IM'
+                    p { text %Q{(or <img src="/static/openid-icon.gif">OpenID)} }
+                    # p '(eg: http://openid.aol.com/<AOL IM>)'
                     # label , :for => 'login_openid', :id => 'login_openid_label'
                     input :name => 'openid_url', :type => 'text', :id => 'login_openid'
                     input :type => 'submit', :value => 'go', :id => 'submit_button'

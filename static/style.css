@@ -41,7 +41,7 @@ body {
   position: absolute;
   margin-top: -147px;
   margin-left: 24px;
-  line-height: 0.5em;
+  line-height: 0em;
 }
 
 #header form.sign_in_form #login_openid {
