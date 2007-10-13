@@ -92,7 +92,10 @@ module Bandnamed::Controllers
     def get(id)
       @user = User.find(@state.user_id) if @state.user_id
       @band = Band.find(id, :include => :user)
-      render :band
+      if (@band)
+        @title = @band.name
+        render :band
+      end
     end
   end
   
@@ -334,7 +337,7 @@ module Bandnamed::Views
   def layout
     xhtml_strict do
       head do
-        title "Band Named | Socially Unacceptable Band Names (now with Ajax)"
+        title "Band Named | #{@title || "Socially Unacceptable Band Names (now with Ajax)"}"
         link :rel => 'stylesheet', :type => 'text/css', :href => '/static/style.css'
         script :type => 'text/javascript', :src => '/static/jquery.js'
         # script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/jquery.js'
