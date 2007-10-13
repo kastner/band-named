@@ -21,7 +21,7 @@ body {
   background: #f2f0e5 url('/static/header.jpg') no-repeat center;
   height: 256px;
   overflow: hidden;
-  text-indent: -1000px;
+/*  text-indent: -1000px;*/
   outline: none;
   padding-left: 230px;
   font-size: 40px;
@@ -34,6 +34,8 @@ body {
   line-height: 390px;
   color: #887457;
   text-decoration: none;
+  text-indent: -10000px;
+  width: 320px;
 }
 
 #header form.sign_in_form {
