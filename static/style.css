@@ -120,3 +120,17 @@ form.new_band input[type=submit] {
   margin-left: 12px;
 }
 
+#new_bands {
+  list-style: none;
+  padding-left: 23px;
+}
+
+#new_bands li {
+  margin-bottom: 12px;
+}
+
+#new_bands li em {
+  display: block;
+  margin-left: 12px;
+}
+

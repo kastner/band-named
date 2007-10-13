@@ -33,6 +33,10 @@ module Bandnamed::Models
     belongs_to :user
     validates_presence_of :name
     validates_uniqueness_of :name
+    
+    # def name
+    #   attributes["name"].gsub(/'/, '&8221;')
+    # end
   end
   
   class User < Base
@@ -81,6 +85,14 @@ module Bandnamed::Controllers
       when "flickr"
         FlickrFace.url(username)
       end
+    end
+  end
+  
+  class ABand < R '/band/(\d+)'
+    def get(id)
+      @user = User.find(@state.user_id) if @state.user_id
+      @band = Band.find(id, :include => :user)
+      render :band
     end
   end
   
@@ -204,7 +216,7 @@ module Bandnamed::Controllers
         "403 - Invalid path"
       end
     end
-  end
+  end  
 end
 
 module Bandnamed::Views
@@ -218,6 +230,12 @@ module Bandnamed::Views
   
   def textalize(str)
     text RedCloth.new(str).to_html
+  end
+  
+  def band
+    h1 { text @band.name }
+    h2 "Created by: #{@band.user.username}"
+    h3 @band.created_at.strftime("%m/%d/%Y at %l:%M %p")
   end
   
   def signup
@@ -308,7 +326,7 @@ module Bandnamed::Views
     end
     ul.new_bands! do
       @new_bands.each do |band|
-        li { text band.name + " <em>by: #{band.user.username}</em>"}
+        li { text "<a href='#{R(ABand, band.id)}'>#{band.name}</a> <em>by: #{band.user.username}</em>"}
       end
     end
   end  
