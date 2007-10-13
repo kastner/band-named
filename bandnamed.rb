@@ -68,7 +68,7 @@ module Bandnamed::Controllers
     def get
       # # raise @state.to_s
       @user = User.find(@state.user_id) if @state.user_id
-      @new_bands = Band.find(:all, :order => "bandnamed_bands.created_at DESC", :limit => 20, :include => :user)
+      @new_bands = Band.find(:all, :order => "bandnamed_bands.created_at DESC", :limit => 50, :include => :user)
       render :index
     end
   end
@@ -333,8 +333,7 @@ module Bandnamed::Views
               if !@state.username or @state.username.empty?
                 form :action => R(Login), :method => :post, :class => "sign_in_form" do
                   div do
-                    p 'type in your AOL IM'
-                    p { text %Q{(or <img src="/static/openid-icon.gif">OpenID)} }
+                    p { text 'type in your AOL IM (or <img src="/static/openid-icon.gif">OpenID)'}
                     # p '(eg: http://openid.aol.com/<AOL IM>)'
                     # label , :for => 'login_openid', :id => 'login_openid_label'
                     input :name => 'openid_url', :type => 'text', :id => 'login_openid'
