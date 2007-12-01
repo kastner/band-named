@@ -340,8 +340,6 @@ module Bandnamed::Views
         title "Band Named | #{@title || "Socially Unacceptable Band Names (now with Ajax)"}"
         link :rel => 'stylesheet', :type => 'text/css', :href => '/static/style.css'
         script :type => 'text/javascript', :src => '/static/jquery.js'
-        # script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/jquery.js'
-        script :type => 'text/javascript', :src => 'http://gridlayouts.com/_assets/_js/gridlayout.js'
       end
       body :id => (@body_id || "home") do
         div.page! do
@@ -383,15 +381,6 @@ module Bandnamed::Views
             # end
           end
           div.content! do
-            div.GridLayout! :style => "display:none" do
-              text %Q!<div id="GridLayout-params">{
-                          column_width:60,
-                          column_count:11,
-                          subcolumn_count:2,
-                          column_gutter:12,
-                          align:'center'
-                      }</div>!
-            end
             self << yield  
           end
         end
