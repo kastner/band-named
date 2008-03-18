@@ -4,7 +4,9 @@ $:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
 require 'rubygems'
 gem 'activerecord', '<2.0'
-%w|mongrel camping mongrel/camping camping/session face openid redcloth open-uri|.each{|lib| require lib}
+gem 'ruby-openid', '=1.1.4'
+require 'openid'
+%w|mongrel camping mongrel/camping camping/session face redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
 
