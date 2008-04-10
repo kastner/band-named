@@ -366,7 +366,7 @@ def Bandnamed.create
 end
 
 if __FILE__ == $0
-  Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping.db"
+  Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping-bandnamed.db"
   Bandnamed::Models::Base.logger = Logger.new('camping.log')
   Bandnamed.create
 
