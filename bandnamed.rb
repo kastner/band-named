@@ -3,10 +3,7 @@
 $:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
 require 'rubygems'
-gem 'activerecord', '<2.0'
-gem 'ruby-openid', '=1.1.4'
-require 'openid'
-%w|mongrel camping mongrel/camping camping/session face redcloth open-uri|.each{|lib| require lib}
+%w|activerecord openid mongrel camping mongrel/camping camping/session face redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
 
@@ -404,6 +401,8 @@ end
 
 if __FILE__ == $0
   Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping.db"
-  Bandnamed::Models::Base.threaded_connections = false
+  Bandnamed::Models::Base.logger = Logger.new('camping.log')
+  Bandnamed.create
+
   Mongrel::Camping::start("0.0.0.0",3302,"/",Bandnamed).run.join
 end
