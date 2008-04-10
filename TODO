@@ -1,0 +1,7 @@
+* Fix up openid
+* Add twitter support
+  * make twitter acct
+  * cron to check for new band names
+* redesign
+
+* add "backstory" and "logo"
