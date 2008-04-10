@@ -18,10 +18,9 @@ module Bandnamed::Helpers
   def HURL(*args)
     url = URL(*args)
     url.scheme = "http"
-    if `hostname`.match(/i-am-a-Mac/)
-      url.host = "bandnamed.com"
-      url.port = nil
-    end
+    url.host = env["HTTP_X_FORWARDED_HOST"] || env["HTTP_HOST"]
+    url.port = nil
+    url.host, url.port = url.host.split(":") if url.host.match(/:/)
     url
   end
   
