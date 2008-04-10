@@ -34,10 +34,6 @@ module Bandnamed::Models
     belongs_to :user
     validates_presence_of :name
     validates_uniqueness_of :name
-    
-    # def name
-    #   attributes["name"].gsub(/'/, '&8221;')
-    # end
   end
   
   class User < Base
@@ -296,12 +292,6 @@ module Bandnamed::Views
   end
   
   def index
-    # h1 "Coming soon!"
-    # if @state.username
-    #   _logged_in_home
-    # else
-    #   _new_home
-    # end
     if @state.username
       h3 "Add a Band"
       form :action => R(NewBand), :method => :post, :class => "new_band" do
@@ -353,17 +343,7 @@ module Bandnamed::Views
                 end
               end
             else
-            end
-            
-            #   if !@new_user
-            #     _login
-            #   end
-            #   hr
-            #   ul.nav! do
-            #     li.home { text %Q{<a href="/">Home #{amp} Peg list</a>} }
-            #     li.what { a "What is a Peg list?", :href => R(What) }
-            #   end
-            # end
+            end            
           end
           div.content! do
             self << yield  
