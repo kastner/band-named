@@ -204,22 +204,6 @@ module Bandnamed::Controllers
       @message = "You have been logged out"
       redirect HURL(Index).to_s
     end
-  end
-  
-  class Static < R '/static/(.+)'
-    MIME_TYPES = {'.css' => 'text/css', '.js' => 'text/javascript', 
-                  '.jpg' => 'image/jpeg'}
-    PATH = File.expand_path(File.dirname(__FILE__))
-
-    def get(path)
-      @headers['Content-Type'] = MIME_TYPES[path[/\.\w+$/, 0]] || "text/plain"
-      unless path.include? ".." # prevent directory traversal attacks
-        @headers['X-Sendfile'] = "#{PATH}/static/#{path}"
-      else
-        @status = "403"
-        "403 - Invalid path"
-      end
-    end
   end  
 end
 
@@ -404,5 +388,7 @@ if __FILE__ == $0
   Bandnamed::Models::Base.logger = Logger.new('camping.log')
   Bandnamed.create
 
-  Mongrel::Camping::start("0.0.0.0",3302,"/",Bandnamed).run.join
+  m = Mongrel::Camping::start("0.0.0.0",3302,"/",Bandnamed)
+  m.register("/static", Mongrel::DirHandler.new("./static"))
+  m.run.join
 end
