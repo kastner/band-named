@@ -4,7 +4,7 @@ $:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
 require 'rubygems'
 require 'ruby-debug'
-%w|activerecord openid openid/store/filesystem mongrel camping mongrel/camping camping/session face redcloth open-uri|.each{|lib| require lib}
+%w|activerecord openid openid/store/filesystem camping camping/session face redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
 
@@ -364,12 +364,6 @@ def Bandnamed.create
   Bandnamed::Models.create_schema :assume => (Bandnamed::Models::Band.table_exists? ? 1.0 : 0.0)
 end
 
-if __FILE__ == $0
-  Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "/Users/kastner/.camping-bandnamed.db"
-  Bandnamed::Models::Base.logger = Logger.new('camping.log')
-  Bandnamed.create
-
-  m = Mongrel::Camping::start("0.0.0.0",3302,"/",Bandnamed)
-  m.register("/static", Mongrel::DirHandler.new("./static"))
-  m.run.join
-end
+Bandnamed::Models::Base.establish_connection :adapter => "sqlite3", :database => "./bandnamed.sqlite3"
+Bandnamed::Models::Base.logger = Logger.new('./log/camping.log')
+Bandnamed.create
