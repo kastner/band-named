@@ -29,7 +29,7 @@ namespace :deploy do
     run <<-CMD
       cd #{release_path} &&
       ln -nfs #{shared_path}/db/bandnamed.sqlite3 #{release_path}/
-      ln -nfs #{release_path}/static #{release_path}/public/static
+      ln -nfs #{release_path}/static #{release_path}/public/
     CMD
   end
 end
