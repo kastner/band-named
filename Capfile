@@ -28,7 +28,7 @@ namespace :deploy do
   task :after_update_code, :roles => :app, :except => {:no_symlink => true} do
     run <<-CMD
       cd #{release_path} &&
-      ln -nfs #{shared_path}/db/bandnamed.sqlite3 #{release_path}/
+      ln -nfs #{shared_path}/db/bandnamed.sqlite3 #{release_path}/ &&
       ln -nfs #{release_path}/static #{release_path}/public/
     CMD
   end
