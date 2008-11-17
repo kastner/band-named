@@ -21,8 +21,6 @@ set :scm, "git"
 set :branch, "master"
 set :git_enable_submodules, 1
 
-set :apache_vhost_dir, "."
-
 namespace :deploy do
   task :restart do
     run "touch #{current_path}/tmp/restart.txt"
@@ -31,6 +29,7 @@ namespace :deploy do
     run <<-CMD
       cd #{release_path} &&
       ln -nfs #{shared_path}/db/bandnamed.sqlite3 #{release_path}/
+      ln -nfs #{release_path}/static #{release_path}/public/static
     CMD
   end
 end
