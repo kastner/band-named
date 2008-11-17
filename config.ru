@@ -3,4 +3,4 @@ require 'rack'
 require 'camping'
 require 'bandnamed'
 
-run Rack::Adapter::Camping.new(BandName)
+run Rack::Adapter::Camping.new(Bandnamed)
