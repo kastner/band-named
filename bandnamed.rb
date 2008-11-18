@@ -2,12 +2,9 @@
 
 $:.unshift File.dirname(__FILE__)
 require 'rubygems'
-require 'ruby-debug'
 %w|activerecord openid openid/store/filesystem camping camping/session face redcloth open-uri|.each{|lib| require lib}
 
 Camping.goes :Bandnamed
-
-# ActiveRecord::Base.logger = Logger.new(STDOUT)
 
 module Bandnamed
   include Camping::Session
@@ -17,8 +14,6 @@ module Bandnamed::Helpers
   def HURL(*args)
     url = URL(*args)
     url.scheme = "http"
-    # url.host = env["HTTP_X_FORWARDED_HOST"] || env["HTTP_HOST"]
-    # url.host, url.port = url.host.split(":") if url.host.match(/:/)
     url
   end
   
@@ -157,11 +152,11 @@ module Bandnamed::Controllers
         raise "Unable to normalize: #{url}"
       end
     end
-
+    
     def get
-      response = open_id_consumer.complete(input, self.HURL(env["REQUEST_PATH"]).to_s)
+      response = open_id_consumer.complete(input, self.HURL(env["REQUEST_PATH"] || env["REQUEST_URI"]).to_s)
       identity_url = normalize_url(response.identity_url) if response.identity_url
-
+      
       case response.status
       when OpenID::Consumer::CANCEL
         @a = "Canceled"
