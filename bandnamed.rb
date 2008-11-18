@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-$:.unshift File.dirname(__FILE__) + "/../../lib"
 $:.unshift File.dirname(__FILE__)
 require 'rubygems'
 require 'ruby-debug'
@@ -18,9 +17,8 @@ module Bandnamed::Helpers
   def HURL(*args)
     url = URL(*args)
     url.scheme = "http"
-    url.host = env["HTTP_X_FORWARDED_HOST"] || env["HTTP_HOST"]
-    url.port = nil
-    url.host, url.port = url.host.split(":") if url.host.match(/:/)
+    # url.host = env["HTTP_X_FORWARDED_HOST"] || env["HTTP_HOST"]
+    # url.host, url.port = url.host.split(":") if url.host.match(/:/)
     url
   end
   
@@ -67,6 +65,7 @@ end
 module Bandnamed::Controllers
   class Index < R '/'
     def get
+      # raise HURL(Index).to_s
       # # raise @state.to_s
       @user = User.find(@state.user_id) if @state.user_id
       @new_bands = Band.find(:all, :order => "bandnamed_bands.created_at DESC", :limit => 50, :include => :user)
